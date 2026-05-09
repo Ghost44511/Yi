@@ -10,7 +10,7 @@ const fs = require('fs');
 const path = require('path');
 
 // --- CONFIGURATION ---
-const ownerNumber = '237650554606@s.whatsapp.net'; 
+const ownerNumber = '237650554606'; // Votre numéro
 const botName = 'Prince K Bot';
 
 async function startBot() {
@@ -20,12 +20,22 @@ async function startBot() {
     const conn = makeWASocket({
         version,
         logger: pino({ level: 'silent' }),
-        printQRInTerminal: true,
+        printQRInTerminal: false, // Désactivé pour privilégier le code à 8 chiffres
         auth: state,
-        browser: [botName, 'Chrome', '1.0.0']
+        // Navigateur nécessaire pour le Pairing Code
+        browser: ["Ubuntu", "Chrome", "20.0.04"] 
     });
 
-    // --- CHARGEMENT SÉCURISÉ DES COMMANDES (ANTI-CRASH) ---
+    // --- LOGIQUE DU CODE À 8 CHIFFRES ---
+    if (!conn.authState.creds.registered) {
+        setTimeout(async () => {
+            let code = await conn.requestPairingCode(ownerNumber);
+            code = code?.match(/.{1,4}/g)?.join('-') || code;
+            console.log(`\n\n🔑 TON CODE DE CONNEXION : ${code}\n\n`);
+        }, 3000);
+    }
+
+    // --- CHARGEMENT SÉCURISÉ DES COMMANDES ---
     const commands = new Map();
     const loadFromDir = (dirName) => {
         const dirPath = path.join(__dirname, 'src', dirName);
@@ -34,19 +44,18 @@ async function startBot() {
             for (const file of files) {
                 try {
                     const fullPath = path.join(dirPath, file);
-                    // Nettoyage du cache pour éviter les erreurs de déploiement
                     delete require.cache[require.resolve(fullPath)];
                     const cmd = require(fullPath);
                     commands.set(file.replace('.js', '').toLowerCase(), cmd);
-                    console.log(`✅ ${dirName}/${file} chargé.`);
+                    console.log(`✅ Chargé : ${dirName}/${file}`);
                 } catch (e) {
-                    console.log(`⚠️ Fichier ${dirName}/${file} introuvable ou erreur. Ignoré.`);
+                    // Ignore silencieusement ou log l'erreur sans stopper le bot
+                    console.log(`⚠️ Erreur sur ${file}, mais le bot continue...`);
                 }
             }
         }
     };
 
-    // Charge vos dossiers de commandes
     loadFromDir('commands');
     loadFromDir('Hub'); // Pour shadow.js
 
@@ -56,11 +65,9 @@ async function startBot() {
         const { connection, lastDisconnect } = update;
         if (connection === 'close') {
             let shouldReconnect = (lastDisconnect.error instanceof Boom)?.output?.statusCode !== DisconnectReason.loggedOut;
-            console.log('Connexion fermée, tentative de reconnexion...');
             if (shouldReconnect) startBot();
         } else if (connection === 'open') {
             console.log(`🛡️ ${botName} est en ligne !`);
-            console.log(`📡 Numéro administrateur : ${ownerNumber}`);
         }
     });
 
@@ -71,15 +78,14 @@ async function startBot() {
             const msgType = Object.keys(m.message)[0];
             const remoteJid = m.key.remoteJid;
             
-            // 1. Détection ViewOnce (Appelle viewonce.js si vous l'avez créé)
+            // Gestion ViewOnce
             if (m.message[msgType]?.viewOnce) {
                 try {
                     const { viewOnceHandler } = require('./viewonce.js');
-                    await viewOnceHandler(conn, m, ownerNumber);
-                } catch (e) { /* Ne fait rien si le fichier n'existe pas */ }
+                    await viewOnceHandler(conn, m, ownerNumber + '@s.whatsapp.net');
+                } catch (e) {}
             }
 
-            // Extraction du texte du message
             const body = (msgType === 'conversation') ? m.message.conversation : 
                          (msgType === 'extendedTextMessage') ? m.message.extendedTextMessage.text : 
                          (msgType === 'imageMessage') ? m.message.imageMessage.caption : 
@@ -90,30 +96,31 @@ async function startBot() {
 
             const args = body.trim().split(/ +/).slice(1);
             const commandName = body.trim().split(/ +/)[0].toLowerCase().slice(prefix.length);
-            const isCreator = remoteJid.includes('237650554606');
+            const isCreator = remoteJid.includes(ownerNumber);
 
-            // 2. Exécution de la commande (ex: .shadow ou .freeze)
-            if (commands.has(commandName)) {
-                try {
-                    const cmd = commands.get(commandName);
-                    // On gère les différents formats d'exportation de commandes
-                    if (typeof cmd.freezeCommand === 'function') {
-                        await cmd.freezeCommand(conn, m, args, isCreator);
-                    } else if (typeof cmd === 'function') {
-                        await cmd(conn, m, args, isCreator);
-                    } else if (cmd.execute) {
-                        await cmd.execute(conn, m, args, isCreator);
-                    }
-                } catch (error) {
-                    console.error(`Erreur exécution ${commandName}:`, error);
+            // --- IGNORER LES COMMANDES INEXISTANTES ---
+            if (!commands.has(commandName)) {
+                return; // Ne fait rien si la commande n'existe pas
+            }
+
+            // Exécution de la commande si elle existe
+            const cmd = commands.get(commandName);
+            try {
+                if (typeof cmd.freezeCommand === 'function') {
+                    await cmd.freezeCommand(conn, m, args, isCreator);
+                } else if (typeof cmd === 'function') {
+                    await cmd(conn, m, args, isCreator);
+                } else if (cmd.execute) {
+                    await cmd.execute(conn, m, args, isCreator);
                 }
+            } catch (err) {
+                console.error(`Erreur sur .${commandName}:`, err);
             }
 
         } catch (err) {
-            console.error("Erreur générale messages.upsert:", err);
+            console.error(err);
         }
     });
 }
 
-// Lancement du bot
-startBot().catch(err => console.error("Erreur critique au démarrage:", err));
+startBot().catch(err => console.log("Erreur critique:", err));
