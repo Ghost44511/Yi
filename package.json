@@ -1,11 +1,10 @@
 {
-  "name": "Prince k",
+  "name": "prince-k-bot",
   "version": "1.0.0",
-  "description": "Prince k WhatsApp Bot — a powerful, fun and intelligent bot packed with extra features, AI capabilities and a sleek futuristic design",
+  "description": "WhatsApp Bot by Prince K",
   "main": "index.js",
   "scripts": {
-    "test": "node test.js",
-    "start": "node index.js"
+    "start": "node index.js"{
   },
   "keywords": [
     "whatsapp",
