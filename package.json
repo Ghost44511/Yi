@@ -1,9 +1,8 @@
 {
-  "name": "GOLDEN-MD-V2",
+  "name": "Prince k",
   "version": "1.0.0",
-  "description": "GOLDEN-MD-V2 WhatsApp Bot — a powerful, fun and intelligent bot packed with extra features, AI capabilities and a sleek futuristic design",
+  "description": "Prince k WhatsApp Bot — a powerful, fun and intelligent bot packed with extra features, AI capabilities and a sleek futuristic design",
   "main": "index.js",
-  "type": "module",
   "scripts": {
     "test": "node test.js",
     "start": "node index.js"
