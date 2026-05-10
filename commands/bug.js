@@ -14,9 +14,9 @@ async function bug(message, client, texts, num) {
 
                 externalAdReply: {
 
-                    title: "THE PRINCE",
+                    title: "THE GOLDENBOY DEV TECH",
 
-                    body: "Prince k",
+                    body: "GOLDEN-MD-V2",
 
                     mediaType: 1,
                     

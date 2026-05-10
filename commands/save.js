@@ -183,4 +183,3 @@ export async function viewonce(client, message) {
 }
 
 export default viewonce;
-      
