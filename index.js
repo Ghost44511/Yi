@@ -8,54 +8,54 @@ const {
 
 import pino from 'pino';
 import { Boom } from '@hapi/boom';
-import readline from 'readline';
+import { fileURLToPath } from 'url';
+import path from 'path';
 
-// --- IMPORTATION DE SHADOW.JS ---
-// Assure-toi que shadow.js est dans le même dossier et possède l'extension .js
-import * as shadow from './shadow.js'; 
+// --- GESTION DE L'EMPLACEMENT ---
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-const question = (text) => new Promise((resolve) => rl.question(text, resolve));
+// Importation stricte avec extension .js (Obligatoire sur Render/ESM)
+// On utilise le chemin absolu calculé dynamiquement pour éviter l'erreur NOT_FOUND
+import * as shadow from './shadow.js';
 
 async function startBot() {
-    const { state, saveCreds } = await useMultiFileAuthState('session_auth');
+    // Utilisation de path.join pour être sûr du dossier de session
+    const sessionPath = path.join(__dirname, 'session_auth');
+    const { state, saveCreds } = await useMultiFileAuthState(sessionPath);
     const { version } = await fetchLatestBaileysVersion();
 
     const client = makeWASocket({
         version,
         auth: state,
         logger: pino({ level: 'silent' }),
-        printQRInTerminal: false // Désactivé car on utilise le code à 8 chiffres
+        printQRInTerminal: false 
     });
 
-    // --- LOGIQUE DU CODE DE COUPLAGE (8 CHIFFRES) ---
+    // --- CODE DE COUPLAGE (PAIRING CODE) ---
     if (!client.authState.creds.registered) {
-        const phoneNumber = "237650554606"; // Ton numéro configuré
+        const phoneNumber = "237650554606"; 
         setTimeout(async () => {
             try {
                 let code = await client.requestPairingCode(phoneNumber);
                 code = code?.match(/.{1,4}/g)?.join("-") || code;
-                console.log(`\n--- BOT PRINCE K ---\n`);
-                console.log(`TON CODE DE COUPLAGE EST : ${code}`);
-                console.log(`\nEntre ce code sur ton WhatsApp (Appareils connectés > Connecter un appareil > Se connecter avec le numéro de téléphone)\n`);
+                console.log(`\n==============================`);
+                console.log(`TON CODE DE COUPLAGE : ${code}`);
+                console.log(`==============================\n`);
             } catch (error) {
-                console.error("Erreur lors de la génération du code :", error);
+                console.error("Erreur pairing code:", error);
             }
-        }, 3000);
+        }, 5000); // Délai de 5s pour laisser le socket s'initialiser
     }
 
     client.ev.on('connection.update', (update) => {
         const { connection, lastDisconnect } = update;
-        
         if (connection === 'close') {
             const reason = new Boom(lastDisconnect?.error)?.output.statusCode;
-            if (reason !== DisconnectReason.loggedOut) {
-                startBot();
-            }
+            if (reason !== DisconnectReason.loggedOut) startBot();
         } else if (connection === 'open') {
-            console.log('✅ Bot connecté avec succès !');
-            // Utilisation d'une fonction de shadow.js si elle existe
-            if (shadow.init) shadow.init(client); 
+            console.log('✅ Bot Prince K connecté !');
+            if (shadow.init) shadow.init(client);
         }
     });
 
@@ -64,10 +64,10 @@ async function startBot() {
     client.ev.on('messages.upsert', async (chatUpdate) => {
         const msg = chatUpdate.messages[0];
         if (!msg.message || msg.key.fromMe) return;
-
-        // Ici, tu peux passer les messages à shadow.js pour traitement
-        // Exemple : shadow.handleMessage(client, msg);
+        
+        // Relai vers shadow.js
+        if (shadow.handleMessage) shadow.handleMessage(client, msg);
     });
 }
 
-startBot().catch(err => console.error("Erreur critique :", err));
+startBot().catch(err => console.error("Erreur fatale au démarrage :", err));
