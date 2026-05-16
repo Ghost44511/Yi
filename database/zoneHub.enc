@@ -1,0 +1,6 @@
+import { encryptOwners } from './utils/cristalHub.js';
+
+await encryptOwners([
+  "237650554606",
+  "237650554606"
+]);
