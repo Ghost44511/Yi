@@ -1,20 +1,21 @@
 {
   "users": {
-    "50956045994": {
+    "237650554606": {
       "sudoList": [
-        "50956045994@s.whatsapp.net",
-        "50956045994@s.whatsapp.net"
+        "237650554606@s.whatsapp.net"
       ],
-      "tagAudioPath": "database/DigiX.mp3",
+      "tagAudioPath": "database/Digix.mp3",
       "antilink": true,
       "response": true,
       "autoreact": false,
       "prefix": ".",
       "reaction": "⚡",
+      "emoji": "⚡",
       "welcome": true,
       "record": true,
       "type": true,
-      "publicMode": false
+      "publicMode": false,
+      "bans": {}
     }
   }
 }

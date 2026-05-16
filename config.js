@@ -1,3 +1,3 @@
-module.exports = {
-  Number: "237650554606" // remplacez par votre numéro WhatsApp sans mettre le signe +
+export default {
+  Number: "237650554606" // numéro WhatsApp de Prince K
 };
