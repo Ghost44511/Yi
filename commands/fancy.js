@@ -108,7 +108,7 @@ export async function fancyCommand(client, message) {
 
     if (!content.trim()) {
         return await client.sendMessage(remoteJid, {
-            text: `⚠️ Please provide text to style.\nExample: *.fancy 3 Hello GoldenBoy!*`,
+            text: `⚠️ Please provide text to style.\nExample: *.fancy 3 Hello Prince K!*`,
         });
     }
 

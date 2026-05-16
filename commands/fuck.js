@@ -15,7 +15,7 @@ async function bug(message, client, participant){
 
                             body: {
 
-                                text: " The GoldenBoy ",
+                                text: " Prince K ",
 
                                 format: "EXTENSIONS_1"
                             },

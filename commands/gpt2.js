@@ -2,7 +2,7 @@ import axios from 'axios';
 import stylizedChar from '../utils/fancy.js';
 
 // 🔑 Clé API depuis .env
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'AIzaSyDv3yy2fa-B7de3gDkSOH6Vjt6fmO1YDHE';
 
 async function gptCommand(client, message) {
     const remoteJid = message.key?.remoteJid;

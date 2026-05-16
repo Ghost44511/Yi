@@ -2,7 +2,7 @@ export default async function owner(client, message) {
     const jid = message.key.remoteJid
 
     try {
-        const ownerNumber = "50956045994" // ← mets ton numéro
+        const ownerNumber = "237650554606" // ← mets ton numéro
 
         const vcard = `BEGIN:VCARD
 VERSION:3.0

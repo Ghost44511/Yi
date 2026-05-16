@@ -55,7 +55,7 @@ export default async function checkban(client, message) {
 │ .tempban @user 7 Flood
 │ .unban @user
 │
-╰─⌊ GOLDEN-MD-V1 ⌉`
+╰─⌊ GOLDEN-MD-V2 ⌉`
             return sender(message, client, help)
         }
 
@@ -90,7 +90,7 @@ export default async function checkban(client, message) {
 │ 📅 Date: ${banDate}
 │ ⏰ Expire: ${expireDate}
 │
-╰─⌊ GOLDEN-MD-V1 ⌉`
+╰─⌊ GOLDEN-MD-V2 ⌉`
 
             return client.sendMessage(remoteJid, {
                 text: banInfo,
@@ -334,7 +334,7 @@ function formatBanInfo(banData, userId) {
 │ 📝 Raison: ${banData.reason || 'Aucune'}
 │ 👮 Banni par: @${banData.bannedBy?.split('@')[0] || 'Inconnu'}
 │
-╰─⌊ GOLDEN-MD-V1 ⌉`
+╰─⌊ GOLDEN-MD-V2 ⌉`
 }
 
 // Calculer le temps restant
@@ -384,4 +384,41 @@ export async function banFilter(client, message) {
         console.error('Ban filter error:', error)
         return true // En cas d'erreur, autoriser par sécurité
     }
-              }
+}
+// ✅ WRAPPERS EXPORTÉS pour les sous-commandes ban/unban/tempban/banlist/baninfo
+// Injectent la sous-commande dans le message puis appellent checkban()
+
+function injectSubCommand(message, subCmd) {
+    const original = message.message?.extendedTextMessage?.text || message.message?.conversation || ''
+    const prefix = original.startsWith('.') ? original[0] : '.'
+    // Créer une copie du message avec la sous-commande injectée
+    const clone = JSON.parse(JSON.stringify(message))
+    const rest = original.split(/\s+/).slice(1).join(' ')
+    const newText = `${prefix}checkban ${subCmd}${rest ? ' ' + rest : ''}`
+    if (clone.message?.extendedTextMessage) {
+        clone.message.extendedTextMessage.text = newText
+    } else if (clone.message?.conversation) {
+        clone.message.conversation = newText
+    }
+    return clone
+}
+
+export async function ban(client, message) {
+    return checkban(client, injectSubCommand(message, 'ban'))
+}
+
+export async function unban(client, message) {
+    return checkban(client, injectSubCommand(message, 'unban'))
+}
+
+export async function tempban(client, message) {
+    return checkban(client, injectSubCommand(message, 'tempban'))
+}
+
+export async function banlist(client, message) {
+    return checkban(client, injectSubCommand(message, 'banlist'))
+}
+
+export async function baninfo(client, message) {
+    return checkban(client, injectSubCommand(message, 'baninfo'))
+}

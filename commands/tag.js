@@ -12,7 +12,7 @@ export async function tagall(client, message) {
         const text = participants.map(user => `@${user.split('@')[0]}`).join(' \n')
 
         await client.sendMessage(remoteJid, {
-            text: `╭─⌈ 🚀 GOLDEN-MD-V2 Broadcast ⌋\n│\n${text}\n│\n╰─⌊ Powered by The GoldenBoy ⌉`,
+            text: `╭─⌈ 🚀 GOLDEN-MD-V2 Broadcast ⌋\n│\n${text}\n│\n╰─⌊ Powered by Prince K ⌉`,
             mentions: participants
         })
 
@@ -32,7 +32,7 @@ export async function tagadmin(client, message) {
         
         if (admins.length === 0) return
 
-        const text = `╭─⌈ 🛡️ GOLDEN-MD-V2 Alert ⌋\n│ Admin Alert\n│\n${admins.map(user => `@${user.split('@')[0]}`).join('\n')}\n│\n╰─⌊ The GoldenBoy Control ⌉`
+        const text = `╭─⌈ 🛡️ GOLDEN-MD-V2 Alert ⌋\n│ Admin Alert\n│\n${admins.map(user => `@${user.split('@')[0]}`).join('\n')}\n│\n╰─⌊ Prince K Control ⌉`
 
         await client.sendMessage(remoteJid, { text, mentions: admins })
 

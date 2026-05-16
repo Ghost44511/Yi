@@ -220,4 +220,4 @@ export default {
     promote,
     demote,
     gclink
-  }
+          }

@@ -20,7 +20,7 @@ export async function photo(client, message) {
 
         await client.sendMessage(message.key.remoteJid, {
             image: fs.readFileSync(filename),
-            caption: '✨ The GoldenBoy'
+            caption: '✨ Prince K'
         })
 
         fs.unlinkSync(filename)

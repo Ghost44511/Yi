@@ -4,7 +4,7 @@ import stylizedChar from '../utils/fancy.js';
 
 // 🔑 TA CLÉ API GEMINI
 
-const GEMINI_API_KEY = 'AIzaSyAAfyzZ4ipWSeoBHknHXF_FJCDwu4uuejk';
+const GEMINI_API_KEY = 'AIzaSyDv3yy2fa-B7de3gDkSOH6Vjt6fmO1YDHE';
 
 async function gptCommand(client, message) {
 

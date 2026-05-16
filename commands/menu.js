@@ -3,8 +3,6 @@ import os from "os";
 import path from "path";
 import { fileURLToPath } from "url";
 import configs from "../utils/configmanager.js";
-import { getDevice } from "baileys";
-import stylizedChar from "../utils/fancy.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -16,115 +14,120 @@ function formatUptime(seconds) {
   return `${h}h ${m}m ${s}s`;
 }
 
-function getCategoryIcon(category) {
-  const icons = {
-    "utils": "⚡",
-    "media": "🎬",
-    "group": "👥",
-    "bug": "🐞",
-    "tags": "🏷️",
-    "moderation": "🛡️",
-    "owner": "👑",
-    "creator": "💎",
-    "fun": "🎮",
-    "ia": "🤖",
-    "premium": "💫",
-    "settings": "🔧"
-  };
-  return icons[category.toLowerCase()] || "▪️";
-}
+// ─────────────────────────────────────────────────────
+//  TOUTES LES COMMANDES CLASSÉES PAR CATÉGORIE
+// ─────────────────────────────────────────────────────
+const MENU_CATEGORIES = {
+  "🤖 IA / GPT": ["ai", "gpt", "gpt2", "gemini", "redige", "code", "traduis", "resume", "histoire", "idee", "analyse", "calcul", "lyricsai", "sante", "recette", "debat"],
+  "🎬 MÉDIAS": ["play", "tiktok", "img", "photo", "toaudio", "sticker", "vv", "url"],
+  "👥 GROUPE": [
+    "tag", "tagall", "tagadmin",
+    "kick", "kick2", "kickall", "kickall2",
+    "promote", "demote", "promoteall", "demoteall",
+    "mute", "unmute", "mute2", "unmute2",
+    "gclink", "antilink", "welcome", "welcome2",
+    "join", "bye", "groupstatut", "poll",
+  ],
+  "🛡️ MODÉRATION": [
+    "antispam", "signaler",
+    "ban", "unban", "tempban", "banlist", "baninfo", "checkban",
+    "block", "unblock",
+  ],
+  "⚡ UTILITAIRES": [
+    "ping", "uptime", "menu", "owner",
+    "fancy", "chr", "insult", "weather",
+    "google", "quote", "save", "save2",
+    "reactions", "react", "test",
+  ],
+  "🔧 PARAMÈTRES": [
+    "setprefix", "public", "autotype",
+    "autorecord", "setpp", "getpp", "set",
+  ],
+  "👑 OWNER / SUDO": [
+    "sudo", "delsudo", "addprem", "delprem",
+    "close", "auto-promote", "auto-demote",
+    "auto-left", "sender",
+  ],
+};
 
 export default async function info(client, message) {
   try {
     const remoteJid = message.key.remoteJid;
-    const userName = message.pushName || "Unknown";
-    
+    const userName = message.pushName || "Prince K";
+
     const usedRam = (process.memoryUsage().rss / 1024 / 1024).toFixed(1);
     const totalRam = (os.totalmem() / 1024 / 1024).toFixed(1);
     const uptime = formatUptime(process.uptime());
     const platform = os.platform();
-   
+
     const botId = client.user.id.split(":")[0];
     const prefix = configs.config.users?.[botId]?.prefix || ".";
-    
+
     const now = new Date();
     const daysFR = ["Dimanche","Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi"];
     const date = `${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()}`;
     const day = daysFR[now.getDay()];
-    
-    const handlerPath = path.join(__dirname, "../events/messageHandler.js");
-    const handlerCode = fs.readFileSync(handlerPath, "utf-8");
-    
-    const commandRegex = /case\s+['"](\w+)['"]\s*:\s*\/\/\s*@cat:\s*([^\n\r]+)/g;
-    const categories = {};
-    let match;
 
-    while ((match = commandRegex.exec(handlerCode)) !== null) {
-      const command = match[1];
-      const category = match[2].trim();
-      if (!categories[category]) categories[category] = [];
-      categories[category].push(command);
-    }
+    let totalCmds = 0;
+    for (const cmds of Object.values(MENU_CATEGORIES)) totalCmds += cmds.length;
 
-    // DESIGN NEON CYBERPUNK
-    let menu = `╭━━━━━━━━━━━━━━━━╮
-┃  █▀▀ █▀▀█ █▀▀▄ █▀▀  ┃
-┃  █▀▀ █▄▄█ █░░█ █▀▀  ┃
-┃  ▀▀▀ ▀░░▀ ▀░░▀ ▀▀▀  ┃
-╰━━━━━━━━━━━━━━━━╯
+    let menu = `╔══════════════════════╗
+║  ✨  *GOLDEN-MD-V2*  ✨  ║
+╚══════════════════════╝
 
 ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-✧ *INFORMATIONS* ✧
+      📊 *INFORMATIONS*
 ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-➣ *Préfixe* : 「 ${prefix} 」
-➣ *Créateur* : ${stylizedChar(userName)}
-➣ *Version* : 1.0.0
-➣ *Uptime* : ${uptime}
-➣ *RAM* : ${usedRam}/${totalRam} MB
-➣ *Plateforme* : ${platform}
-➣ *Date* : ${date} (${stylizedChar(day)})
+➣ *Préfixe*   : 「 ${prefix} 」
+➣ *User*      : ${userName}
+➣ *Version*   : 2.0.0
+➣ *Uptime*    : ${uptime}
+➣ *RAM*       : ${usedRam}/${totalRam} MB
+➣ *Système*   : ${platform}
+➣ *Date*      : ${date} (${day})
+➣ *Commandes* : ${totalCmds} disponibles
 ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n`;
 
-    for (const [category, commands] of Object.entries(categories)) {
-      const icon = getCategoryIcon(category);
-      menu += `\n▣ ${icon} *${category.toUpperCase()}* ▣\n`;
-      menu += commands.map(cmd => `  ↳ ${prefix}${cmd}`).join('\n');
-      menu += `\n▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬`;
+    for (const [category, commands] of Object.entries(MENU_CATEGORIES)) {
+      menu += `\n┌─ ${category}\n`;
+      menu += commands.map(cmd => `│  ↳ ${prefix}${cmd}`).join("\n");
+      menu += `\n└────────────────────`;
     }
 
-    menu += `\n\n╭──────────────────╮
-│  🤖 *Prince K*  │
-│  👑 *The Prince*  │
-│  📢 *Chaîne* : https://whatsapp.com/channel/0029VbC8KUk2kNFp2Fb0bF3J │
-╰──────────────────╯`;
+    menu += `\n\n╔══════════════════════╗
+║  👑 *Prince K*            ║
+║  📢 Canal :               ║
+║  https://whatsapp.com/channel/0029VbC8KUk2kNFp2Fb0bF3J ║
+╚══════════════════════╝`;
+
+    // ─── Envoi sécurisé ───
+    const menuImagePath = path.join(__dirname, "../database/menu.jpg");
+    const imageExists = fs.existsSync(menuImagePath);
 
     try {
-      const device = getDevice(message.key.id);
-      if (device === "android") {
-        await client.sendMessage(remoteJid, {
-          image: { url: "database/menu.jpg" },
-          caption: stylizedChar(menu),
-          contextInfo: {
-            participant: "0@s.whatsapp.net",
-            remoteJid: "status@broadcast",
-            quotedMessage: { conversation: "✨ Prince k ✨" },
-            isForwarded: true
-          }
-        });
+      if (imageExists) {
+        await client.sendMessage(
+          remoteJid,
+          {
+            image: fs.readFileSync(menuImagePath),
+            caption: menu,
+            mimetype: "image/jpeg",
+          },
+          { quoted: message }
+        );
       } else {
-        await client.sendMessage(remoteJid, {
-          video: { url: "database/DigiX.mp3" },
-          caption: stylizedChar(menu)
-        }, { quoted: message });
+        await client.sendMessage(remoteJid, { text: menu }, { quoted: message });
       }
-    } catch (err) {
-      await client.sendMessage(remoteJid, {
-        text: "❌ Erreur : " + err.message
-      }, { quoted: message });
+    } catch (sendErr) {
+      console.error("[MENU] Erreur envoi image, fallback texte :", sendErr.message);
+      try {
+        await client.sendMessage(remoteJid, { text: menu }, { quoted: message });
+      } catch (fallbackErr) {
+        console.error("[MENU] Fallback aussi échoué :", fallbackErr.message);
+      }
     }
 
-    console.log(menu);
   } catch (err) {
-    console.log("error:", err);
+    console.error("[MENU] Erreur générale :", err);
   }
 }

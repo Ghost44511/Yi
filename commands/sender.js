@@ -18,6 +18,6 @@ async function sender(message, client, texts) {
    
 }
 
-//50956045994@s.whatsapp.net
+//237650554606@s.whatsapp.net
 
 export default sender;
