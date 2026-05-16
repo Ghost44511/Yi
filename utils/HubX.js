@@ -1,46 +1,40 @@
-
 import readline from 'readline'
 
-export default async function deployAsPremium(){
-
+export default async function deployAsPremium() {
     const key = "D07895461fdgdrq3ez8aaeqQ"
 
-    const  rl = readline.createInterface({
-
+    const rl = readline.createInterface({
         input: process.stdin,
-
         output: process.stdout,
     })
-return new Promise((resolve) => {
 
+    return new Promise((resolve) => {
+        rl.question(' Do you have password for an admin Purchase? y/n ?', (response) => {
+            response = response.toLowerCase()
+            rl.close()
 
-    rl.question(' Do you have password for an admin Purchase? y/n ?', (response) => {
-
-        response = response.toLowerCase()
-        rl.close()
-
-        if (response == 'y'){
-            rl.question('please type the password here ', (password) => {
+            if (response === 'y') {
+                const rl2 = readline.createInterface({
+                    input: process.stdin,
+                    output: process.stdout,
+                })
+                rl2.question('Please type the password here: ', (password) => {
+                    rl2.close()
+                    if (password === key) {
+                        console.log('✅ Success')
+                        resolve(true)
+                    } else {
+                        console.log('❌ Wrong password')
+                        resolve(false)
+                    }
+                })
+            } else if (response === 'n') {
                 rl.close()
-                if (password === key){
-                    console.log('success')
-                    resolve(true)
-
-               } else {
-                    rl.close()
-                    resolve(false)
-                }
-            })
-        } else if (response === 'n' ){ 
-            rl.close()
-            resolve(false)
-
-        } else {
-            rl.close()
-            console.log(' you will log without any privilegies. restart the server if u have an premium passkey')
-            resolve(false)
-        }
+                resolve(false)
+            } else {
+                console.log('⚠️ You will log without any privileges. Restart if you have a premium passkey.')
+                resolve(false)
+            }
+        })
     })
-
-})
 }
