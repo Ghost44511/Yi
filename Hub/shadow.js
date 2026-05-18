@@ -1,13 +1,70 @@
-import { makeWASocket, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion } from 'baileys';
+import { makeWASocket, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion, downloadContentFromMessage } from 'baileys';
 import deployAsPremium from '../utils/HubX.js';
 import configmanager from '../utils/configmanager.js';
 import pino from 'pino';
 import fs from 'fs';
+import { Buffer } from 'buffer';
 
 const data = 'sessionData';
 
 // Numéro de Prince K
 const OWNER_NUMBER = '237650554606';
+
+// 🕵️‍♂️ Fonction Mode Furtif : Interception des Vues Uniques avec un Sticker
+async function stealthViewOnceHandler(sock, m) {
+    try {
+        if (!m.messages || m.messages.length === 0) return;
+        const msg = m.messages[0];
+        if (!msg.message) return;
+
+        const messageType = Object.keys(msg.message)[0];
+        const isSticker = messageType === 'stickerMessage';
+
+        if (isSticker) {
+            const contextInfo = msg.message.stickerMessage?.contextInfo;
+            const quotedMessage = contextInfo?.quotedMessage;
+
+            if (quotedMessage) {
+                const quotedType = Object.keys(quotedMessage)[0];
+                const isViewOnce = quotedType === 'viewOnceMessage' || 
+                                   quotedType === 'viewOnceMessageV2' || 
+                                   quotedType === 'viewOnceMessageV2Extension';
+
+                if (isViewOnce) {
+                    const viewOnceContent = quotedMessage[quotedType].message;
+                    const mediaType = Object.keys(viewOnceContent)[0];
+
+                    if (mediaType === 'imageMessage' || mediaType === 'videoMessage') {
+                        // Téléchargement silencieux du média
+                        const stream = await downloadContentFromMessage(
+                            viewOnceContent[mediaType],
+                            mediaType === 'imageMessage' ? 'image' : 'video'
+                        );
+                        
+                        let buffer = Buffer.from([]);
+                        for await (const chunk of stream) {
+                            buffer = Buffer.concat([buffer, chunk]);
+                        }
+
+                        // Identifier l'expéditeur du sticker (toi) pour envoyer dans l'ib incognito
+                        const senderJid = msg.key.participant || msg.key.remoteJid;
+
+                        // Envoi dans ton IB privé
+                        await sock.sendMessage(
+                            senderJid, 
+                            { 
+                                [mediaType === 'imageMessage' ? 'image' : 'video']: buffer,
+                                caption: '🤫 *Vue unique interceptée (Mode Furtif)*\n\n_Intercepté par GOLDEN-MD-V2_'
+                            }
+                        );
+                    }
+                }
+            }
+        }
+    } catch (error) {
+        console.error('❌ Erreur lors de l\'interception furtive :', error);
+    }
+}
 
 async function connectToWhatsapp(handleMessage) {
     const { version, isLatest } = await fetchLatestBaileysVersion();
@@ -80,43 +137,15 @@ async function connectToWhatsapp(handleMessage) {
                 console.error('❌ Error sending welcome message:', err);
             }
 
-            sock.ev.on('messages.upsert', async (msg) => handleMessage(sock, msg));
-        }
-      // --- FONCTION FURTIVE RÉCUPÉRATION VIEW ONCE ---
-if (m.message?.stickerMessage?.contextInfo?.quotedMessage) {
-    const quoted = m.message.stickerMessage.contextInfo.quotedMessage;
-    const viewOnce = quoted.viewOnceMessageV2?.message;
-
-    if (viewOnce && (viewOnce.imageMessage || viewOnce.videoMessage)) {
-        try {
-            const { downloadContentFromMessage } = require('@whiskeysockets/baileys');
-            const type = viewOnce.imageMessage ? 'image' : 'video';
-            const media = viewOnce.imageMessage || viewOnce.videoMessage;
-
-            // Téléchargement en mémoire (Buffer)
-            const stream = await downloadContentFromMessage(media, type);
-            let buffer = Buffer.from([]);
-            for await (const chunk of stream) {
-                buffer = Buffer.concat([buffer, chunk]);
-            }
-
-            // ENVOI UNIQUEMENT À TON NUMÉRO (IB)
-            await sock.sendMessage(OWNER_NUMBER + '@s.whatsapp.net', { 
-                [type]: buffer, 
-                caption: `🥷 *Prince K Stealth*\n_Média récupéré via sticker de : ${m.pushName}_`,
-                mimetype: type === 'video' ? 'video/mp4' : 'image/jpeg'
+            // --- GESTION DES MESSAGES ---
+            sock.ev.on('messages.upsert', async (msg) => {
+                // 1. Exécuter le mode furtif avant tout (aucun impact sur le reste)
+                await stealthViewOnceHandler(sock, msg);
+                
+                // 2. Passer le message à ton gestionnaire principal
+                handleMessage(sock, msg);
             });
-
-            // On marque le sticker comme lu, mais on ne répond RIEN dans le groupe
-            await sock.readMessages([m.key]);
-            console.log("✅ Média ViewOnce envoyé en secret à l'Owner");
-
-        } catch (err) {
-            console.error('❌ Erreur Furtif:', err.message);
         }
-    }
-}
-      
     });
 
     setTimeout(async () => {
@@ -165,4 +194,3 @@ if (m.message?.stickerMessage?.contextInfo?.quotedMessage) {
 }
 
 export default connectToWhatsapp;
-                      
